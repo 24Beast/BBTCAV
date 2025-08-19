@@ -211,3 +211,6 @@ __marimo__/
 
 # CUSTOM
 *.pth
+models/
+vals/
+cav/

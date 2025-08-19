@@ -32,16 +32,19 @@ class BBTCAV:
             total = 0
             for imgs, labels in trainloader:
                 optimizer.zero_grad()
-                imgs, labels = imgs.to(self.device), labels.to(self.device).unsqueeze(1).float()
+                imgs, labels = (
+                    imgs.to(self.device),
+                    labels.to(self.device).unsqueeze(1).float(),
+                )
                 outputs = self.model(imgs)
                 loss = criterion(outputs, labels)
                 loss.backward()
                 optimizer.step()
                 running_loss += loss.item()
-                if(self.post_activation):
-                    predicted = (torch.sigmoid(outputs) > 0.5) * 1.
+                if self.post_activation:
+                    predicted = (torch.sigmoid(outputs) > 0.5) * 1.0
                 else:
-                    predicted = (outputs > 0.5) * 1.
+                    predicted = (outputs > 0.5) * 1.0
                 correct += (predicted == labels).sum().item()
                 total += labels.size(0)
             train_loss = running_loss / total
@@ -60,15 +63,18 @@ class BBTCAV:
         self.model.eval()
         with torch.no_grad():
             for inputs, labels in testloader:
-                inputs, labels = inputs.to(self.device), labels.to(self.device).unsqueeze(1).float()
+                inputs, labels = (
+                    inputs.to(self.device),
+                    labels.to(self.device).unsqueeze(1).float(),
+                )
                 outputs = self.model(inputs)
                 criterion = self.train_params["loss_function"]()
                 loss = criterion(outputs, labels)
                 test_loss += loss.item() * inputs.size(0)
-                if(self.post_activation):
-                    predicted = (torch.sigmoid(outputs) > 0.5) * 1.
+                if self.post_activation:
+                    predicted = (torch.sigmoid(outputs) > 0.5) * 1.0
                 else:
-                    predicted = (outputs > 0.5) * 1.
+                    predicted = (outputs > 0.5) * 1.0
                 correct += (predicted == labels).sum().item()
                 total += labels.size(0)
 
