@@ -24,7 +24,7 @@ VALS_PATH = "./vals/TCAV/"
 H, W = (64, 64)
 
 # Setting up Path
-if not(os.path.isdir(VALS_PATH)):
+if not (os.path.isdir(VALS_PATH)):
     os.makedirs(VALS_PATH)
 
 
@@ -73,7 +73,7 @@ for num in range(len(concept_attrs)):
     )
     negative_concept = getConceptfromDataset(train_concept_data, val=0, name="random")
     concepts = [[positive_concept, negative_concept]]
-    
+
     val_concept_data = CelebAConcept(
         data_dir=DATA_DIR,
         split="valid",
@@ -84,28 +84,31 @@ for num in range(len(concept_attrs)):
         concept_num=1000,
     )
     val_concept_loader = DataLoader(val_concept_data, batch_size=B_SIZE)
-    
+
     print("Loading Model.")
     checkpoint = torch.load(MODEL_PATH)
     model = SimpleCNN().to(DEVICE)
     model.load_state_dict(checkpoint["model_state_dict"])
     model_layer = "net.9"
-    
+
     # Initializing TCAV
     tcav_obj = TCAV(
         model=model,
         layers=model_layer,
-        layer_attr_method=LayerIntegratedGradients(model, None, multiply_by_inputs=False),
+        layer_attr_method=LayerIntegratedGradients(
+            model, None, multiply_by_inputs=False
+        ),
     )
-    
+
     vals = []
     for imgs, _, labels in val_concept_loader:
         if len(labels.shape) == 1:
             labels = labels.reshape(-1, 1)
         imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
         scores = tcav_obj.interpret(inputs=imgs, experimental_sets=concepts)
-        vals.append(scores[f"{2*num}-{(2*num)+1}"][model_layer]['magnitude'].cpu())
+        vals.append(scores[f"{2*num}-{(2*num)+1}"][model_layer]["magnitude"].cpu())
     vals = np.array(vals)
-    
-    np.save(VALS_PATH + f"CelebA_SimpleCNN_{target_attr}_{concept_attrs[num]}.npy", vals)
-    
+
+    np.save(
+        VALS_PATH + f"CelebA_SimpleCNN_{target_attr}_{concept_attrs[num]}.npy", vals
+    )

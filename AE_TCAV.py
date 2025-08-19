@@ -193,4 +193,6 @@ if __name__ == "__main__":
             curr_grads = interpreter.getAttribution(main_model, imgs, 0, 0, eps=1)
             grads[start : start + l] = curr_grads
             start += l
-    print(f"{concept_attr=},{len(grads)=},{grads.mean()=},{grads.std()/(len(grads)**0.5)=}")
+    print(
+        f"{concept_attr=},{len(grads)=},{grads.mean()=},{grads.std()/(len(grads)**0.5)=}"
+    )
