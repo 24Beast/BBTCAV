@@ -49,7 +49,7 @@ getConceptfromDataset.num = 0
 
 # Loading Data
 target_attr = "Attractive"
-concept_attrs = ["Age", "Gender", "Skin", "Bald", "Fat", "Smiling"]
+concept_attrs = ["Age", "Gender", "Skin", "Bald", "Fat"]
 transform = transforms.Compose(
     [
         transforms.Resize((H, W)),
@@ -108,6 +108,9 @@ for num in range(len(concept_attrs)):
         scores = tcav_obj.interpret(inputs=imgs, experimental_sets=concepts)
         vals.append(scores[f"{2*num}-{(2*num)+1}"][model_layer]["magnitude"].cpu())
     vals = np.array(vals)
+    print(
+        f"{target_attr=}, {vals[:,1].mean()=}, Confidence interval: {2.00 * vals[:,1].std()/(len(vals)**0.5)}"
+    )
 
     np.save(
         VALS_PATH + f"CelebA_SimpleCNN_{target_attr}_{concept_attrs[num]}.npy", vals

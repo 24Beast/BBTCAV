@@ -30,7 +30,7 @@ H, W = (64, 64)
 
 print("Loading Data")
 target_attr = "Attractive"
-concept_attrs = ["Age", "Gender", "Skin", "Bald", "Fat", "Smiling"]
+concept_attrs = ["Age", "Gender", "Skin", "Bald", "Fat"]
 transform = transforms.Compose(
     [
         transforms.Resize((H, W)),
@@ -82,4 +82,6 @@ for c_num, c_name in enumerate(concept_attrs):
             curr_grads = interpreter.getAttribution(main_model, imgs, c_num, 0, eps=1)
             grads[start : start + l] = curr_grads
             start += l
-    print(f"{c_name=},{len(grads)=},{grads.mean()=},{grads.std()/(len(grads)**0.5)=}")
+    print(
+        f"{c_name=},{len(grads)=},{grads.mean()=},{2.00 * grads.std()/(len(grads)**0.5)=}"
+    )
