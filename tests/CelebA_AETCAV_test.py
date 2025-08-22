@@ -24,13 +24,13 @@ TRAIN_PARAMS_NEW = {
 B_SIZE = 256
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 VALS_PATH = "./vals/AE_TCAV/"
-LATENT_DIMS = 1024
+LATENT_DIMS = 256
 H, W = (64, 64)
 
 
 print("Loading Data")
 target_attr = "Attractive"
-concept_attrs = ["Age", "Gender", "Skin", "Bald", "Fat"]
+concept_attrs = ["Age", "Gender", "Skin", "Bald"]
 transform = transforms.Compose(
     [
         transforms.Resize((H, W)),

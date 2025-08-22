@@ -49,7 +49,7 @@ getConceptfromDataset.num = 0
 
 # Loading Data
 target_attr = "Attractive"
-concept_attrs = ["Age", "Gender", "Skin", "Bald", "Fat"]
+concept_attrs = ["Age", "Gender", "Skin", "Bald"]
 transform = transforms.Compose(
     [
         transforms.Resize((H, W)),

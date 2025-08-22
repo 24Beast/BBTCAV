@@ -14,3 +14,8 @@ In the main directory, run the following snippet:
 In the main directory, run the following snippet:
 
 `python -m tests.CelebA_TCAV`
+
+### Requirements
+torch: 2.7.0
+torchvision: 0.22.0
+captum: 0.7.0
