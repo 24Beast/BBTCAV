@@ -1,4 +1,5 @@
 import torch.nn as nn
+from torchvision import transforms, models
 
 
 class SimpleCNN(nn.Module):
