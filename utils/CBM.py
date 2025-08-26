@@ -20,11 +20,13 @@ class ConceptBottleneckModel(nn.Module):
         self.bottleneck_activation = bottleneck_activation
 
         if encoder_name == "resnet18":
-            enc = models.resnet18(pretrained=pretrained)
-            self.encoder = nn.Sequential(*list(enc.children())[:-1])  # remove fc
-            encoder_output_dim = enc.fc.in_features
+            enc = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
+        elif encoder_name == "vit_b_16":
+            enc = models.vit_b_16(weights=models.ViT_B_16_Weights.IMAGENET1K_V1)
         else:
             raise ValueError("Unsupported encoder_name: %s" % encoder_name)
+        self.encoder = nn.Sequential(*list(enc.children())[:-1])  # remove fc
+        encoder_output_dim = enc.fc.in_features
 
         self.concept_predictor = nn.Sequential(
             nn.Flatten(),
