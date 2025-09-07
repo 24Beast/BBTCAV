@@ -23,7 +23,7 @@ class ConceptBottleneckModel(nn.Module):
         self.num_concepts = num_concepts
         self.num_classes = num_classes
         self.bottleneck_activation = bottleneck_activation
-        if task_predictor_type in VALID_TASK_PRED_TYPES:
+        if not (task_predictor_type in VALID_TASK_PRED_TYPES):
             raise ValueError(
                 f"Unexpected value: {task_predictor_type} given for task_predictor_type expected values in {VALID_TASK_PRED_TYPES}"
             )
@@ -73,11 +73,14 @@ class ConceptBottleneckModel(nn.Module):
 
         concept_probs = self.apply_concept_activation(concept_logits)
 
+        temp = concept_probs
+
         if self.task_predictor_type == "poly":
-            self.exponents = self.exponents.to(concept_probs.device)
-            concept_probs = concept_probs.unsqueeze(-1) ** self.exponents.view(1, 1, -1)
-            concept_probs = concept_probs.reshape(concept_probs.size(0), -1)
-        task_logits = self.task_predictor(concept_probs)
+            self.exponents = self.exponents.to(temp.device)
+            temp = temp.unsqueeze(-1) ** self.exponents.view(1, 1, -1)
+            temp = temp.reshape(concept_probs.size(0), -1)
+
+        task_logits = self.task_predictor(temp)
 
         if return_intermediate:
             return concept_logits, concept_probs, task_logits

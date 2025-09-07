@@ -14,7 +14,12 @@ NUM_EPOCHS = 5
 LR = 0.001
 DATA_DIR = "../Datasets/CelebA/"
 SAVE_DIR = "./models/"
-MODEL_NAME = "celebA_CBM.pth"
+LAST_STAGE = "poly"
+POLY_POW = 3
+if LAST_STAGE == "linear":
+    MODEL_NAME = "celebA_CBM.pth"
+else:
+    MODEL_NAME = f"celebA_CBM_{LAST_STAGE}_{POLY_POW}.pth"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 ALPHA = 0.05
 
@@ -54,7 +59,9 @@ val_loader = DataLoader(val_data, batch_size=B_SIZE)
 # Model Definition
 print("Preparing for training...")
 
-model = ConceptBottleneckModel(len(concepts), 1, pretrained=True).to(DEVICE)
+model = ConceptBottleneckModel(
+    len(concepts), 1, pretrained=True, task_predictor_type=LAST_STAGE, poly_pow=POLY_POW
+).to(DEVICE)
 criterion = nn.BCEWithLogitsLoss()
 optimizer = optim.Adam(model.parameters(), lr=LR)
 
