@@ -91,9 +91,7 @@ for epoch in range(NUM_EPOCHS):
                 torch.sigmoid(pred_labels) > 0.5
             )  # Convert logits to binary predictions
             correct_labels = (pred_labels.float() == labels).sum().item()
-            pred_concepts = (
-                torch.sigmoid(pred_concepts) > 0.5
-            )  # Convert logits to binary predictions
+            pred_concepts = pred_concepts > 0.5
             correct_concepts += (
                 (pred_concepts.float() == concepts).float().mean(axis=1).sum().item()
             )

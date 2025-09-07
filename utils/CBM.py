@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
+from typing import Literal
 from torchvision import models
+
+VALID_TASK_PRED_TYPES = ["linear", "poly"]
 
 
 class ConceptBottleneckModel(nn.Module):
@@ -13,11 +16,19 @@ class ConceptBottleneckModel(nn.Module):
         pretrained: bool = False,
         bottleneck_activation: str = "sigmoid",
         encoder_output_dim: int = 512,
+        task_predictor_type: Literal["linear", "poly"] = "linear",
+        poly_pow: int = 2,
     ):
         super().__init__()
         self.num_concepts = num_concepts
         self.num_classes = num_classes
         self.bottleneck_activation = bottleneck_activation
+        if task_predictor_type in VALID_TASK_PRED_TYPES:
+            raise ValueError(
+                f"Unexpected value: {task_predictor_type} given for task_predictor_type expected values in {VALID_TASK_PRED_TYPES}"
+            )
+        self.task_predictor_type = task_predictor_type
+        self.poly_pow = poly_pow
 
         if encoder_name == "resnet18":
             enc = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
@@ -35,9 +46,15 @@ class ConceptBottleneckModel(nn.Module):
             nn.Linear(512, num_concepts),
         )
 
-        self.task_predictor = nn.Sequential(
-            nn.Linear(num_concepts, num_classes),
-        )
+        if task_predictor_type == "linear":
+            self.task_predictor = nn.Sequential(
+                nn.Linear(num_concepts, num_classes),
+            )
+        elif task_predictor_type == "poly":
+            self.exponents = torch.arange(1, self.poly_pow + 1)
+            self.task_predictor = nn.Sequential(
+                nn.Linear(int(num_concepts * self.poly_pow), num_classes),
+            )
 
     def apply_concept_activation(self, concept_logits: torch.Tensor):
         if self.bottleneck_activation == "sigmoid":
@@ -56,6 +73,10 @@ class ConceptBottleneckModel(nn.Module):
 
         concept_probs = self.apply_concept_activation(concept_logits)
 
+        if self.task_predictor_type == "poly":
+            self.exponents = self.exponents.to(concept_probs.device)
+            concept_probs = concept_probs.unsqueeze(-1) ** self.exponents.view(1, 1, -1)
+            concept_probs = concept_probs.reshape(concept_probs.size(0), -1)
         task_logits = self.task_predictor(concept_probs)
 
         if return_intermediate:
