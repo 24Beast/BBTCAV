@@ -14,10 +14,10 @@ NUM_EPOCHS = 5
 LR = 0.001
 DATA_DIR = "../Datasets/CelebA/"
 SAVE_DIR = "./models/"
-LAST_STAGE = "poly"
+LAST_STAGE = "linear"
 POLY_POW = 3
 if LAST_STAGE == "linear":
-    MODEL_NAME = "celebA_CBM.pth"
+    MODEL_NAME = "celebA_CBM_1.pth"
 else:
     MODEL_NAME = f"celebA_CBM_{LAST_STAGE}_{POLY_POW}.pth"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
