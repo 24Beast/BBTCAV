@@ -1,6 +1,8 @@
 # Importing Libraries
 import os
 import torch
+import random
+import numpy as np
 import torch.nn as nn
 import torch.optim as optim
 from utils.data import CelebAJointConcept
@@ -23,6 +25,14 @@ else:
     MODEL_NAME = f"celebA_CBM_{LAST_STAGE}_{POLY_POW}.pth"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 ALPHA = 0.05
+SEED = 0
+
+# Setting up random seeds
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.deterministic = True
 
 # Dataset Definition and init
 target_attr = "Attractive"
