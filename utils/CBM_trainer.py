@@ -3,18 +3,19 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torchvision import transforms
 from utils.data import CelebAJointConcept
 from torch.utils.data import DataLoader
 from utils.CBM import ConceptBottleneckModel
+from utils.ImageNetModels import TRANSFORM_DICT
 
 # Constants
-B_SIZE = 4096
+B_SIZE = 512
 NUM_EPOCHS = 5
 LR = 0.001
 DATA_DIR = "../Datasets/CelebA/"
 SAVE_DIR = "./models/"
 LAST_STAGE = "linear"
+ENCODER = "resnet18"
 POLY_POW = 3
 if LAST_STAGE == "linear":
     MODEL_NAME = "celebA_CBM_1.pth"
@@ -26,13 +27,7 @@ ALPHA = 0.05
 # Dataset Definition and init
 target_attr = "Attractive"
 concepts = ["Age", "Gender", "Skin", "Bald"]
-transform = transforms.Compose(
-    [
-        transforms.Resize((64, 64)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5] * 3, std=[0.5] * 3),
-    ]
-)
+transform = TRANSFORM_DICT[ENCODER]
 
 print("Loading Data....")
 train_data = CelebAJointConcept(
@@ -60,7 +55,12 @@ val_loader = DataLoader(val_data, batch_size=B_SIZE)
 print("Preparing for training...")
 
 model = ConceptBottleneckModel(
-    len(concepts), 1, pretrained=True, task_predictor_type=LAST_STAGE, poly_pow=POLY_POW
+    len(concepts),
+    1,
+    encoder_name=ENCODER,
+    pretrained=True,
+    task_predictor_type=LAST_STAGE,
+    poly_pow=POLY_POW,
 ).to(DEVICE)
 criterion = nn.BCEWithLogitsLoss()
 optimizer = optim.Adam(model.parameters(), lr=LR)

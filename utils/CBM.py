@@ -4,6 +4,10 @@ from typing import Literal
 from torchvision import models
 
 VALID_TASK_PRED_TYPES = ["linear", "poly"]
+WEIGHT_DICT = {
+    "resnet18": models.ResNet18_Weights.IMAGENET1K_V1,
+    "vit_b_16": models.ViT_B_16_Weights.IMAGENET1K_V1,
+}
 
 
 class ConceptBottleneckModel(nn.Module):
@@ -13,7 +17,7 @@ class ConceptBottleneckModel(nn.Module):
         num_concepts: int,
         num_classes: int,
         encoder_name: str = "resnet18",
-        pretrained: bool = False,
+        pretrained: bool = True,
         bottleneck_activation: str = "sigmoid",
         encoder_output_dim: int = 512,
         task_predictor_type: Literal["linear", "poly"] = "linear",
@@ -30,10 +34,12 @@ class ConceptBottleneckModel(nn.Module):
         self.task_predictor_type = task_predictor_type
         self.poly_pow = poly_pow
 
+        weights = WEIGHT_DICT.get(encoder_name, None) if pretrained else None
+
         if encoder_name == "resnet18":
-            enc = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
+            enc = models.resnet18(weights=weights)
         elif encoder_name == "vit_b_16":
-            enc = models.vit_b_16(weights=models.ViT_B_16_Weights.IMAGENET1K_V1)
+            enc = models.vit_b_16(weights=weights)
         else:
             raise ValueError("Unsupported encoder_name: %s" % encoder_name)
         self.encoder = nn.Sequential(*list(enc.children())[:-1])  # remove fc
