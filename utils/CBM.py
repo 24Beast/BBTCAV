@@ -46,6 +46,7 @@ class ConceptBottleneckModel(nn.Module):
         encoder_output_dim = enc.fc.in_features
 
         self.concept_predictor = nn.Sequential(
+            self.encoder,
             nn.Flatten(),
             nn.Linear(encoder_output_dim, 512),
             nn.ReLU(inplace=True),
@@ -74,8 +75,7 @@ class ConceptBottleneckModel(nn.Module):
         return concept_probs
 
     def forward(self, x: torch.Tensor, return_intermediate: bool = False):
-        features = self.encoder(x)
-        concept_logits = self.concept_predictor(features)
+        concept_logits = self.concept_predictor(x)
 
         concept_probs = self.apply_concept_activation(concept_logits)
 

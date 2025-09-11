@@ -13,7 +13,8 @@ from utils.ImageNetModels import TRANSFORM_DICT
 # Constants
 B_SIZE = 512
 NUM_EPOCHS = 5
-LR = 0.001
+LR_C = 0.001
+LR_T = 0.001
 DATA_DIR = "../Datasets/CelebA/"
 SAVE_DIR = "./models/"
 LAST_STAGE = "linear"
@@ -24,7 +25,8 @@ if LAST_STAGE == "linear":
 else:
     MODEL_NAME = f"celebA_CBM_{LAST_STAGE}_{POLY_POW}.pth"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-ALPHA = 0.05
+# TODO: Add some kind of scheduler for ALPHA, we want it to decrease from 1->0 as training progresses.
+ALPHA = 0.5
 SEED = 0
 
 # Setting up random seeds
@@ -73,24 +75,30 @@ model = ConceptBottleneckModel(
     poly_pow=POLY_POW,
 ).to(DEVICE)
 criterion = nn.BCEWithLogitsLoss()
-optimizer = optim.Adam(model.parameters(), lr=LR)
+optimizer_C = optim.Adam(model.concept_predictor.parameters(), lr=LR_C)
+optimizer_T = optim.Adam(model.task_predictor.parameters(), lr=LR_T)
 
 for epoch in range(NUM_EPOCHS):
     model.train()
     total_loss = 0
     n = len(train_loader)
+    print(f"Working on batch 0/{n}", end="")
     for i, (imgs, concepts, labels) in enumerate(train_loader):
-        print(f"\rWorking on batch {i}/{n}", end="")
+        optimizer_C.zero_grad()
+        optimizer_T.zero_grad()
         imgs, labels = imgs.to(DEVICE), labels.to(DEVICE).unsqueeze(1).float()
         concepts = concepts.to(DEVICE)
         _, pred_concepts, pred_labels = model(imgs, return_intermediate=True)
         loss_pred = criterion(pred_labels, labels)
         loss_concepts = criterion(pred_concepts, concepts.float())
         loss = loss_pred + ALPHA * loss_concepts
-
-        optimizer.zero_grad()
         loss.backward()
-        optimizer.step()
+        optimizer_C.step()
+        optimizer_T.step()
+        print(
+            f"\rWorking on batch {i+1}/{n}, prev_loss = {loss.item()}, {loss_concepts.item()=}, {loss_pred.item()=}",
+            end="",
+        )
 
         total_loss += loss.item() * imgs.size(0)
     avg_loss = total_loss / len(train_loader.dataset)
