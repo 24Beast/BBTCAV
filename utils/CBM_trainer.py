@@ -136,7 +136,8 @@ save_path = SAVE_DIR + MODEL_NAME
 torch.save(
     {
         "model_state_dict": model.state_dict(),
-        "optimizer_state_dict": optimizer.state_dict(),
+        "optimizer_C_state_dict": optimizer_C.state_dict(),
+        "optimizer_T_state_dict": optimizer_T.state_dict(),
     },
     save_path,
 )
