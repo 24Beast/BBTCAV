@@ -93,3 +93,8 @@ for c_num, c_name in enumerate(concept_attrs):
     print(
         f"{c_name=},{len(grads)=},{grads.mean()=},{2.00 * grads.std()/(len(grads)**0.5)=}"
     )
+
+print("Model weights:")
+weights = main_model.task_predictor[0].weight.cpu().detach()
+weights = weights.reshape((-1, len(concept_attrs)))
+print(weights)
