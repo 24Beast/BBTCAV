@@ -214,3 +214,4 @@ __marimo__/
 models/
 vals/
 cav/
+configs/local_*

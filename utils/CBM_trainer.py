@@ -21,7 +21,7 @@ LAST_STAGE = "linear"
 ENCODER = "resnet18"
 POLY_POW = 3
 if LAST_STAGE == "linear":
-    MODEL_NAME = "celebA_CBM_1.pth"
+    MODEL_NAME = "celebA_CBM_1_50.pth"
 else:
     MODEL_NAME = f"celebA_CBM_{LAST_STAGE}_{POLY_POW}.pth"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")

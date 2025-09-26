@@ -7,16 +7,17 @@ from torch.utils.data import DataLoader
 from utils.data import CelebAJointConcept
 from utils.CBM import ConceptBottleneckModel
 from utils.models import AutoEncoderWithClassifier
+from utils.ImageNetModels import TRANSFORM_DICT
 
 torch.manual_seed(0)
 np.random.seed(0)
 random.seed(0)
 
 
-MODEL_PATH = "models/celebA_CBM_1.pth"
+MODEL_PATH = "models/celebA_CBM_1_50.pth"
 DATA_DIR = "../Datasets/CelebA/"
 TRAIN_PARAMS_NEW = {
-    "epochs": 25,
+    "epochs": 50,
     "recon_loss_function": torch.nn.MSELoss,
     "cls_loss_function": torch.nn.BCEWithLogitsLoss,
     "learning_rate": 1e-3,
@@ -25,14 +26,17 @@ TRAIN_PARAMS_NEW = {
 B_SIZE = 256
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 VALS_PATH = "./vals/AE_TCAV/"
-LATENT_DIMS = 256
-H, W = (64, 64)
+LATENT_DIMS = 1024
+H, W = (224, 224)
 LAST_STAGE = "linear"
 POLY_POW = 3
+ENCODER = "resnet18"
 
 print("Loading Data")
 target_attr = "Attractive"
 concept_attrs = ["Age", "Gender", "Skin", "Bald"]
+transform = TRANSFORM_DICT[ENCODER]
+"""
 transform = transforms.Compose(
     [
         transforms.Resize((H, W)),
@@ -40,6 +44,7 @@ transform = transforms.Compose(
         transforms.Normalize(mean=[0.5] * 3, std=[0.5] * 3),
     ]
 )
+"""
 train_concept_data = CelebAJointConcept(
     data_dir=DATA_DIR,
     split="train",
@@ -69,6 +74,7 @@ checkpoint = torch.load(MODEL_PATH)
 main_model = ConceptBottleneckModel(
     len(concept_attrs),
     1,
+    encoder_name=ENCODER,
     pretrained=True,
     task_predictor_type=LAST_STAGE,
     poly_pow=POLY_POW,
