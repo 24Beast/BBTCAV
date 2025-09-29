@@ -4,10 +4,20 @@ import pandas as pd
 from PIL import Image
 from pathlib import Path
 
+
+# Helper Function
+def getNumDict(DATA_PATH, concept_name):
+    file_path = DATA_PATH / f"c_{concept_name}.csv"
+    data = pd.read_csv(file_path)
+    num_dict = {item.number: item.code for num, item in data.iterrows()}
+    return num_dict
+
+
 # Testing
 
 DATA_PATH = Path("C:/Users/btokas/Projects/NetDissect/dataset/broden1_227")
 CONCEPT_TYPES = ["color", "object", "part", "material", "texture", "scene"]
+CONCEPT_DICTS = {concept: getNumDict(DATA_PATH, concept) for concept in CONCEPT_TYPES}
 
 index_file_path = DATA_PATH / "index.csv"
 
@@ -25,6 +35,7 @@ for num in range(num_imgs):
     data_val = {}
     data_val["img_name"] = item["image"]
     for concept in seg_concepts:
+        curr_concept_dict = CONCEPT_DICTS[concept]
         if (type(item[concept]) == float) and (np.isnan(item[concept])):
             data_val[concept] = []
         else:
@@ -40,15 +51,31 @@ for num in range(num_imgs):
                 else:
                     vals = np.unique(img)
                 vals = vals[vals != 0]
+                vals = [
+                    curr_concept_dict[item]
+                    for item in vals
+                    if int(item) in curr_concept_dict.keys()
+                ]
                 data_val[concept].extend(vals)
     for concept in num_concepts:
-        if (type(item[concept]) == float) and (np.isnan(item[concept])):
+        curr_concept_dict = CONCEPT_DICTS[concept]
+        if pd.isna(item[concept]):
             data_val[concept] = []
         else:
             if type(item[concept]) == str:
-                data_val[concept] = item[concept].split(";")
+                vals = item[concept].split(";")
+                vals = [
+                    curr_concept_dict[int(item)]
+                    for item in vals
+                    if int(item) in curr_concept_dict.keys()
+                ]
+                data_val[concept] = vals
             else:
-                data_val[concept] = [item[concept]]
+                data_val[concept] = (
+                    [curr_concept_dict[int(item[concept])]]
+                    if int(item[concept]) in curr_concept_dict.keys()
+                    else []
+                )
     data_vals.append(data_val)
 
 data = pd.DataFrame(data_vals)
