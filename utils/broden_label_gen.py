@@ -45,8 +45,10 @@ for num in range(num_imgs):
                 img_path = DATA_PATH / "images" / file_path
                 img = Image.open(img_path)
                 img = np.array(img)
+                img = img[:, :, 0] + 256 * img[:, :, 1]  # Labels = Red + 256* Green
                 if concept == "color":
                     vals, counts = np.unique(img, return_counts=True)
+                    # Filter only those colors with more that 5% presence in the image.
                     vals = vals[counts >= 0.05 * counts.sum()]
                 else:
                     vals = np.unique(img)
