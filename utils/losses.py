@@ -71,7 +71,7 @@ class SupConLossMultiLabel(nn.Module):
 
         # Mask out self-comparisons
         self_mask = torch.eye(batch_size, dtype=torch.bool, device=device)
-        sim_matrix = sim_matrix.masked_fill(self_mask, -float("inf"))
+        sim_matrix = sim_matrix.masked_fill(self_mask, -9e15) # - inf causes nan values!
 
         # Positive mask: [B, B] where samples share ≥1 label
         pos_mask = (labels @ labels.T) > 0  # bool
