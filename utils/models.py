@@ -86,3 +86,15 @@ class AutoEncoderWithClassifier(nn.Module):
         recon = self.decoder(z)
         pred = self.classifier(z)
         return recon, pred, z
+
+
+class AutoEncoder(nn.Module):
+    def __init__(self, latent_dim, H=32, W=32):
+        super().__init__()
+        self.encoder = Encoder(latent_dim, H, W)
+        self.decoder = Decoder(latent_dim, H, W)
+
+    def forward(self, x):
+        z = self.encoder(x)
+        recon = self.decoder(z)
+        return recon, z

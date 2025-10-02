@@ -4,7 +4,7 @@ import itertools
 import torchvision
 from pathlib import Path
 from typing import Literal, Union
-from broden_dataset import BroDenDataset
+from .broden_dataset import BroDenDataset
 
 # CONSTANTS
 FACIAL_HAIR_CLS = ["5_o_Clock_Shadow", "Goatee", "Mustache", "No_Beard", "Sideburns"]
