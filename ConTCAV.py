@@ -173,13 +173,13 @@ if __name__ == "__main__":
         "recon_loss_function": torch.nn.MSELoss,
         "cls_loss_function": torch.nn.BCEWithLogitsLoss,
         "learning_rate": 1e-3,
-        "alpha": 0.01,
+        "alpha": 0.5,
         "Num_Concepts": len(CONCEPTS),
     }
-    B_SIZE = 256
+    B_SIZE = 512
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     VALS_PATH = "./vals/"
-    LATENT_DIMS = 1024
+    LATENT_DIMS = 2048
     H, W = (64, 64)
 
     print("Loading Data")
@@ -232,7 +232,7 @@ if __name__ == "__main__":
                 l = len(imgs)
                 imgs = imgs.to(DEVICE)
                 curr_grads = interpreter.getAttribution(
-                    main_model, imgs, c_num, 0, eps=100
+                    main_model, imgs, c_num, 0, eps=0.1
                 )
                 grads[start : start + l] = curr_grads
                 start += l

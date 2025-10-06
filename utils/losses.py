@@ -25,7 +25,7 @@ class SupConLoss(nn.Module):
         sim_matrix = torch.matmul(features, features.T) / self.temperature
         # Mask self-contrast
         mask = torch.eye(batch_size, dtype=torch.bool, device=device)
-        sim_matrix = sim_matrix.masked_fill(mask, -9e15)
+        sim_matrix = sim_matrix.masked_fill(mask, 0)
 
         # Build label mask
         labels = labels.contiguous().view(-1, 1)
@@ -65,13 +65,16 @@ class SupConLossMultiLabel(nn.Module):
 
         # Normalize feature embeddings
         features = F.normalize(features, dim=1)
+        # print(f"{features.mean()=}, {features.std()=}")
 
         # Cosine similarity matrix [B, B]
         sim_matrix = torch.matmul(features, features.T) / self.temperature
+        # print(f"{sim_matrix.mean()=}, {sim_matrix.std()=}")
 
         # Mask out self-comparisons
         self_mask = torch.eye(batch_size, dtype=torch.bool, device=device)
-        sim_matrix = sim_matrix.masked_fill(self_mask, -9e15) # - inf causes nan values!
+        sim_matrix = sim_matrix.masked_fill(self_mask, 0)  # - inf causes nan values!
+        # print(f"{sim_matrix.mean()=}, {sim_matrix.std()=}")
 
         # Positive mask: [B, B] where samples share ≥1 label
         pos_mask = (labels @ labels.T) > 0  # bool
@@ -79,6 +82,7 @@ class SupConLossMultiLabel(nn.Module):
         # Compute log-probabilities
         logsumexp = torch.logsumexp(sim_matrix, dim=1, keepdim=True)
         log_prob = sim_matrix - logsumexp
+        # print(f"{log_prob.mean()=}, {log_prob.std()=}")
 
         # Only keep positives
         pos_mask = pos_mask.float()
@@ -90,7 +94,7 @@ class SupConLossMultiLabel(nn.Module):
 
 
 if __name__ == "__main__":
-    from models import AutoEncoder
+    from utils.models import AutoEncoder
 
     x = torch.rand(50, 3, 32, 32)  # e.g. MNIST flattened
     y = torch.randint(0, 10, (50,))  # class labels
