@@ -160,6 +160,7 @@ if __name__ == "__main__":
     from utils.data import CelebAJointConcept
     from torch.utils.data import DataLoader
     from utils.models import SimpleCNN, AutoEncoder
+    from utils.debug import visualize
 
     torch.manual_seed(0)
     np.random.seed(0)
@@ -169,11 +170,10 @@ if __name__ == "__main__":
     DATA_DIR = "../Datasets/CelebA/"
     CONCEPTS = ["Age", "Gender", "Skin", "Bald"]
     TRAIN_PARAMS = {
-        "epochs": 25,
+        "epochs": 100,
         "recon_loss_function": torch.nn.MSELoss,
-        "cls_loss_function": torch.nn.BCEWithLogitsLoss,
-        "learning_rate": 1e-3,
-        "alpha": 0.5,
+        "learning_rate": 5e-3,
+        "alpha": 0.01,
         "Num_Concepts": len(CONCEPTS),
     }
     B_SIZE = 512
@@ -239,3 +239,6 @@ if __name__ == "__main__":
         print(
             f"{c_name=},{len(grads)=},{grads.mean()=},{2.00 * grads.std()/(len(grads)**0.5)=}"
         )
+
+    recon, z = interpreter.model(imgs)
+    visualize(imgs, recon)

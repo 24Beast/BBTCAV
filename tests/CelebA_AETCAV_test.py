@@ -2,6 +2,7 @@ import torch
 import random
 import numpy as np
 from AE_TCAV import AETCAV
+from utils.debug import visualize
 from torchvision import transforms
 from utils.data import CelebAJointConcept
 from torch.utils.data import DataLoader
@@ -85,3 +86,6 @@ for c_num, c_name in enumerate(concept_attrs):
     print(
         f"{c_name=},{len(grads)=},{grads.mean()=},{2.00 * grads.std()/(len(grads)**0.5)=}"
     )
+
+recon, c, z = interpreter.model(imgs)
+visualize(imgs, recon)

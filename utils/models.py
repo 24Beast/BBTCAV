@@ -31,9 +31,11 @@ class Encoder(nn.Module):
             nn.ReLU(),
             nn.Conv2d(32, 64, 4, stride=2, padding=1),  # [B, 64, H/4, W/4]
             nn.ReLU(),
+            nn.Conv2d(64, 128, 4, stride=2, padding=1),  # [B, 64, H/8, W/8]
+            nn.ReLU(),
             nn.Flatten(),
         )
-        self.fc = nn.Linear(int(H // 4) * int(W // 4) * 64, latent_dim)
+        self.fc = nn.Linear(int(H // 8) * int(W // 8) * 128, latent_dim)
 
     def forward(self, x):
         x = self.conv(x)
@@ -45,9 +47,11 @@ class Decoder(nn.Module):
     def __init__(self, latent_dim, H, W):
         super().__init__()
         self.fc = nn.Sequential(
-            nn.Linear(latent_dim, int(H // 4) * int(W // 4) * 64), nn.ReLU()
+            nn.Linear(latent_dim, int(H // 8) * int(W // 8) * 128), nn.ReLU()
         )
         self.deconv = nn.Sequential(
+            nn.ConvTranspose2d(128, 64, 4, stride=2, padding=1),  # [B, 32, H//4, W//4]
+            nn.ReLU(),
             nn.ConvTranspose2d(64, 32, 4, stride=2, padding=1),  # [B, 32, H//2, W//2]
             nn.ReLU(),
             nn.ConvTranspose2d(32, 3, 4, stride=2, padding=1),  # [B, 3, H, W]
@@ -58,7 +62,7 @@ class Decoder(nn.Module):
 
     def forward(self, z):
         x = self.fc(z)
-        x = x.view(-1, 64, int(self.H // 4), int(self.W // 4))
+        x = x.view(-1, 128, int(self.H // 8), int(self.W // 8))
         return self.deconv(x)
 
 
