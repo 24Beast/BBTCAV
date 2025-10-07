@@ -2,9 +2,9 @@ import torch
 import random
 import numpy as np
 from AE_TCAV import AETCAV
-from utils.debug import visualize
 from torchvision import transforms
 from utils.data import CelebAJointConcept
+from utils.debug import visualize, PCA_vis
 from torch.utils.data import DataLoader
 from utils.models import SimpleCNN, AutoEncoderWithClassifier
 
@@ -89,3 +89,16 @@ for c_num, c_name in enumerate(concept_attrs):
 
 recon, c, z = interpreter.model(imgs)
 visualize(imgs, recon)
+
+num = len(train_concept_loader.dataset)
+z_collected = torch.zeros((num, LATENT_DIMS))
+l_collected = torch.zeros((num, len(concept_attrs)))
+start = 0
+for i, (imgs, concepts) in enumerate(train_concept_loader, 1):
+    imgs = imgs.to(DEVICE)
+    l = len(imgs)
+    _, _, z = interpreter.model(imgs)
+    z_collected[start : start + l] = z
+    l_collected[start : start + l] = concepts
+
+PCA_vis(z_collected.detach(), l_collected.detach())

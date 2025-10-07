@@ -114,7 +114,15 @@ class ConstrastiveTCAV:
         self.mu = mu
         self.sigma = sigma
 
-    def getAttribution(self, pred_model, imgs, concept_num, class_num, eps=0.01):
+    def getAttribution(
+        self,
+        pred_model,
+        imgs,
+        concept_num,
+        class_num,
+        eps=0.01,
+        transform_func=lambda x: x,
+    ):
         recon, z = self.model(imgs)
         c_vector = (
             self.mu[concept_num] - z
@@ -122,8 +130,8 @@ class ConstrastiveTCAV:
         c_vector = c_vector / torch.norm(c_vector)  # converting to unit vector
         z_new = z + (eps * c_vector)
         imgs_new = self.model.decoder(z_new)
-        preds = self.getPreds(pred_model, recon, class_num)
-        new_preds = self.getPreds(pred_model, imgs_new, class_num)
+        preds = self.getPreds(pred_model, recon, class_num, transform_func)
+        new_preds = self.getPreds(pred_model, imgs_new, class_num, transform_func)
         grads = (new_preds - preds) / eps
         return grads
 
@@ -143,8 +151,8 @@ class ConstrastiveTCAV:
         self.mu = torch.load(save_dir / "mu.pt")
         self.sigma = torch.load(save_dir / "sigma.pt")
 
-    def getPreds(self, pred_model, imgs, class_num=None):
-        preds = pred_model(imgs)
+    def getPreds(self, pred_model, imgs, class_num=None, transform_func=lambda x: x):
+        preds = pred_model(transform_func(imgs))
         if len(preds.shape) == 1:
             preds = preds.reshape(-1, 1)
         if class_num == None:
@@ -154,13 +162,12 @@ class ConstrastiveTCAV:
 
 # Testing
 if __name__ == "__main__":
-    # TODO: Update Below
     import random
     from torchvision import transforms
     from utils.data import CelebAJointConcept
     from torch.utils.data import DataLoader
     from utils.models import SimpleCNN, AutoEncoder
-    from utils.debug import visualize
+    from utils.debug import visualize, PCA_vis
 
     torch.manual_seed(0)
     np.random.seed(0)
@@ -170,10 +177,10 @@ if __name__ == "__main__":
     DATA_DIR = "../Datasets/CelebA/"
     CONCEPTS = ["Age", "Gender", "Skin", "Bald"]
     TRAIN_PARAMS = {
-        "epochs": 100,
+        "epochs": 10,
         "recon_loss_function": torch.nn.MSELoss,
         "learning_rate": 5e-3,
-        "alpha": 0.01,
+        "alpha": 0.05,
         "Num_Concepts": len(CONCEPTS),
     }
     B_SIZE = 512
@@ -189,9 +196,10 @@ if __name__ == "__main__":
         [
             transforms.Resize((H, W)),
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.5] * 3, std=[0.5] * 3),
+            # transforms.Normalize(mean=[0.5] * 3, std=[0.5] * 3),
         ]
     )
+    external_transform = transforms.Normalize(mean=[0.5] * 3, std=[0.5] * 3)
     train_concept_data = CelebAJointConcept(
         data_dir=DATA_DIR,
         split="train",
@@ -232,7 +240,12 @@ if __name__ == "__main__":
                 l = len(imgs)
                 imgs = imgs.to(DEVICE)
                 curr_grads = interpreter.getAttribution(
-                    main_model, imgs, c_num, 0, eps=0.1
+                    main_model,
+                    imgs,
+                    c_num,
+                    0,
+                    eps=0.1,
+                    transform_func=external_transform,
                 )
                 grads[start : start + l] = curr_grads
                 start += l
@@ -242,3 +255,16 @@ if __name__ == "__main__":
 
     recon, z = interpreter.model(imgs)
     visualize(imgs, recon)
+
+    num = len(train_concept_loader.dataset)
+    z_collected = torch.zeros((num, LATENT_DIMS))
+    l_collected = torch.zeros((num, len(concept_attrs)))
+    start = 0
+    for i, (imgs, concepts) in enumerate(train_concept_loader, 1):
+        imgs = imgs.to(DEVICE)
+        l = len(imgs)
+        _, z = interpreter.model(imgs)
+        z_collected[start : start + l] = z
+        l_collected[start : start + l] = concepts
+
+    PCA_vis(z_collected.detach(), l_collected.detach())
