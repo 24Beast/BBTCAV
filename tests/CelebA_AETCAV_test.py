@@ -16,11 +16,11 @@ random.seed(0)
 MODEL_PATH = "models/celebA_CNN.pth"
 DATA_DIR = "../Datasets/CelebA/"
 TRAIN_PARAMS_NEW = {
-    "epochs": 25,
+    "epochs": 50,
     "recon_loss_function": torch.nn.MSELoss,
     "cls_loss_function": torch.nn.BCEWithLogitsLoss,
     "learning_rate": 1e-3,
-    "alpha": 0.01,
+    "alpha": 0.001,
 }
 B_SIZE = 128
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -36,9 +36,10 @@ transform = transforms.Compose(
     [
         transforms.Resize((H, W)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5] * 3, std=[0.5] * 3),
+        # transforms.Normalize(mean=[0.5] * 3, std=[0.5] * 3),
     ]
 )
+external_transform = transforms.Normalize(mean=[0.5] * 3, std=[0.5] * 3)
 train_concept_data = CelebAJointConcept(
     data_dir=DATA_DIR,
     split="train",
@@ -80,7 +81,9 @@ for c_num, c_name in enumerate(concept_attrs):
         for i, (imgs, concepts) in enumerate(val_concept_loader, 1):
             l = len(imgs)
             imgs = imgs.to(DEVICE)
-            curr_grads = interpreter.getAttribution(main_model, imgs, c_num, 0, eps=1)
+            curr_grads = interpreter.getAttribution(
+                main_model, imgs, c_num, 0, eps=1, transform_func=external_transform
+            )
             grads[start : start + l] = curr_grads
             start += l
     print(
@@ -101,4 +104,4 @@ for i, (imgs, concepts) in enumerate(train_concept_loader, 1):
     z_collected[start : start + l] = z
     l_collected[start : start + l] = concepts
 
-PCA_vis(z_collected.detach(), l_collected.detach())
+PCA_vis(z_collected.detach(), l_collected.detach(), num_components=5)

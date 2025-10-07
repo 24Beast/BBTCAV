@@ -87,7 +87,7 @@ class AETCAV:
         total_cls = total_cls / num
 
         print(
-            f"Test Recon Loss: {total_recon:.4f} | Test Class Loss: {total_cls:.4f}\n"
+            f"Validation Recon Loss: {total_recon:.4f} | Validation Class Loss: {total_cls:.4f}\n"
         )
 
     def initModel(self, model: torch.nn.Module, train_params: dict = None):
@@ -96,19 +96,27 @@ class AETCAV:
         for key, value in train_params.items():
             self.train_params[key] = value
 
-    def getAttribution(self, pred_model, imgs, concept_num, class_num, eps=0.01):
+    def getAttribution(
+        self,
+        pred_model,
+        imgs,
+        concept_num,
+        class_num,
+        eps=0.01,
+        transform_func=lambda x: x,
+    ):
         recon, c_preds, z = self.model(imgs)
         c_vector = self.model.classifier.classifier.weight[concept_num]
         c_vector = c_vector / torch.norm(c_vector)  # converting to unit vector
         z_new = z + (eps * c_vector)
         imgs_new = self.model.decoder(z_new)
         preds = self.getPreds(pred_model, recon, class_num)
-        new_preds = self.getPreds(pred_model, imgs_new, class_num)
+        new_preds = self.getPreds(pred_model, imgs_new, class_num, transform_func)
         grads = (new_preds - preds) / eps
         return grads
 
-    def getPreds(self, pred_model, imgs, class_num=None):
-        preds = pred_model(imgs)
+    def getPreds(self, pred_model, imgs, class_num=None, transform_func=lambda x: x):
+        preds = pred_model(transform_func(imgs))
         if len(preds.shape) == 1:
             preds = preds.reshape(-1, 1)
         if class_num == None:

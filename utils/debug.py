@@ -47,10 +47,12 @@ def PCA_vis(z, labels, num_components=2):
     z_pca = torch.mm(z_centered, components)
 
     unique_labels = labels.unique()
-    for label in unique_labels:
-        idx = labels == label
-        z_curr = z_pca[idx]
-        plt.scatter(z_curr[:, 0], z_curr[:, 1], label=label)
-    plt.title("PCA Visualizations.")
-    plt.legend()
-    plt.show()
+    for i in range(num_components):
+        for j in range(i + 1, num_components):
+            for label in unique_labels:
+                idx = labels == label
+                z_curr = z_pca[idx]
+                plt.scatter(z_curr[:, i], z_curr[:, j], label=label)
+            plt.title(f"PCA Visualizations for axis {i} and {j}.")
+            plt.legend()
+            plt.show()

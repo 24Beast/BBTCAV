@@ -177,9 +177,9 @@ if __name__ == "__main__":
     DATA_DIR = "../Datasets/CelebA/"
     CONCEPTS = ["Age", "Gender", "Skin", "Bald"]
     TRAIN_PARAMS = {
-        "epochs": 10,
+        "epochs": 100,
         "recon_loss_function": torch.nn.MSELoss,
-        "learning_rate": 5e-3,
+        "learning_rate": 1e-3,
         "alpha": 0.05,
         "Num_Concepts": len(CONCEPTS),
     }
@@ -267,4 +267,10 @@ if __name__ == "__main__":
         z_collected[start : start + l] = z
         l_collected[start : start + l] = concepts
 
-    PCA_vis(z_collected.detach(), l_collected.detach())
+    PCA_vis(z_collected.detach(), l_collected.detach(), num_components=5)
+    epochs = TRAIN_PARAMS["epochs"]
+    alpha = TRAIN_PARAMS["alpha"]
+    lr = TRAIN_PARAMS["learning_rate"]
+    interpreter.saveModel(
+        f"./models/ConTCAV_models/epochs_{epochs}_alpha_{alpha}_lr_{lr:.4f}/"
+    )
