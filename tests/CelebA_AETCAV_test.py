@@ -4,14 +4,11 @@ import numpy as np
 from AE_TCAV import AETCAV
 from torchvision import transforms
 from utils.data import CelebAJointConcept
-from utils.debug import visualize, PCA_vis
+from utils.debug import visualize, PCA_vis, set_seed
 from torch.utils.data import DataLoader
 from utils.models import SimpleCNN, AutoEncoderWithClassifier
 
-torch.manual_seed(0)
-np.random.seed(0)
-random.seed(0)
-
+set_seed(0)
 
 MODEL_PATH = "models/celebA_CNN.pth"
 DATA_DIR = "../Datasets/CelebA/"

@@ -2,8 +2,12 @@ import enum
 import torchvision
 from torchvision import transforms
 
+
+def rescale(x):
+    return x / 255.0
+
+
 resize = transforms.Resize(256, interpolation=transforms.InterpolationMode.BILINEAR)
-rescale = lambda x: x / 255
 normalize = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 DEFAULT_TRANSFORM = [
     transforms.CenterCrop(224),

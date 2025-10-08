@@ -1,0 +1,26 @@
+model:
+  type: resnet
+  encoder: resnet18
+  model_path: models/celebA_CBM_1_50.pth
+  latent_dim: 1024
+  poly_pow: 3
+  last_stage: linear
+
+training:
+  epochs: 50
+  batch_size: 128
+  lr: 0.001
+  alpha: 0.01
+
+data:
+    data_dir: ../Datasets/CelebA/
+    vals_path: ./vals/AE_TCAV/
+    height: 224
+    width: 224
+    concept_num_train: 4000
+    concept_num_val: 2000
+    target_attr: Attractive
+    concept_attrs: ["Age", "Gender", "Skin", "Bald"]
+
+
+seed: 0

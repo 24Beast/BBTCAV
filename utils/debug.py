@@ -1,8 +1,15 @@
 # Importing Libraries
 import torch
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 from torchvision.transforms.functional import to_pil_image
+
+
+def set_seed(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
 
 
 def visualize(imgs, recons, num_imgs=10):

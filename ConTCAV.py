@@ -167,11 +167,9 @@ if __name__ == "__main__":
     from utils.data import CelebAJointConcept
     from torch.utils.data import DataLoader
     from utils.models import SimpleCNN, AutoEncoder
-    from utils.debug import visualize, PCA_vis
+    from utils.debug import visualize, PCA_vis, set_seed
 
-    torch.manual_seed(0)
-    np.random.seed(0)
-    random.seed(0)
+    set_seed(0)
 
     MODEL_PATH = "models/celebA_CNN.pth"
     DATA_DIR = "../Datasets/CelebA/"

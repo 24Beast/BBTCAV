@@ -3,6 +3,7 @@ import os
 import torch
 import random
 import numpy as np
+from utils.debug import set_seed
 from torchvision import transforms
 from utils.models import SimpleCNN
 from utils.data import CelebAConcept
@@ -11,9 +12,7 @@ from captum.concept import TCAV, Concept
 from captum.attr import LayerIntegratedGradients
 
 # Setting Random state
-torch.manual_seed(0)
-np.random.seed(0)
-random.seed(0)
+set_seed(0)
 
 # Setting Constants
 MODEL_PATH = "models/celebA_CNN.pth"
