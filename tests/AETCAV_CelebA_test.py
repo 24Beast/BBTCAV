@@ -1,9 +1,7 @@
 import os
-import random
-import argparse
-import torch
-import numpy as np
 import yaml
+import torch
+import argparse
 from tqdm import tqdm
 from torchvision import transforms
 from torch.utils.data import DataLoader

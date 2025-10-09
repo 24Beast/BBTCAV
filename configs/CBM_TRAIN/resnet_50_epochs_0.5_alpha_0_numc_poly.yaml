@@ -1,0 +1,16 @@
+training:
+    batch_size: 512
+    num_epochs: 5
+    lr_c: 0.001
+    lr_t: 0.001
+    num_c: 0
+    alpha: 0.5
+    
+data:
+    data_dir: ../Datasets/CelebA/
+
+model:
+    save_dir: ./models/CBM/
+    encoder: resnet18
+    last_stage: poly
+    poly_pow: 3

@@ -1,40 +1,52 @@
 # Importing Libraries
 import os
+import yaml
 import torch
-import random
-import numpy as np
+import argparse
 import torch.nn as nn
 import torch.optim as optim
 from utils.data import CelebAJointConcept
 from torch.utils.data import DataLoader
 from utils.CBM import ConceptBottleneckModel
 from utils.ImageNetModels import TRANSFORM_DICT
+from utils.debug import set_seed
+
+
+# Parser for args
+parser = argparse.ArgumentParser(description="AE-TCAV Runner with YAML Config")
+parser.add_argument(
+    "--config", type=str, required=True, help="Path to YAML configuration file"
+)
+args = parser.parse_args()
+
+with open(args.config, "r") as f:
+    config = yaml.safe_load(f)
+
+print(f"{config=}")
 
 # Constants
-B_SIZE = 512
-NUM_EPOCHS = 5
-LR_C = 0.001
-LR_T = 0.001
-DATA_DIR = "../Datasets/CelebA/"
-SAVE_DIR = "./models/"
-LAST_STAGE = "linear"
-ENCODER = "resnet18"
-POLY_POW = 3
+B_SIZE = config["training"].get("batch_size", 512)
+NUM_EPOCHS = config["training"].get("num_epochs", 5)
+LR_C = config["training"].get("lr_c", 0.001)
+LR_T = config["training"].get("lr_t", 0.001)
+NUM_C = config["training"].get("num_c", 0)
+ALPHA = config["training"].get("alpha", 0.5)
+DATA_DIR = config["data"].get("data_dir", "../Datasets/CelebA/")
+SAVE_DIR = config["model"].get("save_dir", "./models/")
+LAST_STAGE = config["model"].get("last_stage", "linear")
+ENCODER = config["model"].get("encoder", "resnet18")
+POLY_POW = 1
 if LAST_STAGE == "linear":
-    MODEL_NAME = "celebA_CBM_1_50.pth"
+    MODEL_NAME = f"celebA_CBM_linear_{NUM_EPOCHS}_{ALPHA:.3f}.pth"
 else:
+    POLY_POW = config["model"].get("poly_pow", 3)
     MODEL_NAME = f"celebA_CBM_{LAST_STAGE}_{POLY_POW}.pth"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # TODO: Add some kind of scheduler for ALPHA, we want it to decrease from 1->0 as training progresses.
-ALPHA = 0.5
-SEED = 0
+SEED = config.get("seed", 0)
 
 # Setting up random seeds
-random.seed(SEED)
-np.random.seed(SEED)
-torch.manual_seed(SEED)
-torch.backends.cudnn.benchmark = False
-torch.backends.cudnn.deterministic = True
+set_seed(SEED)
 
 # Dataset Definition and init
 target_attr = "Attractive"
@@ -82,7 +94,10 @@ for epoch in range(NUM_EPOCHS):
     model.train()
     total_loss = 0
     n = len(train_loader)
-    print(f"Working on batch 0/{n}", end="")
+    if epoch < NUM_C:
+        curr_alpha = 1.0
+    else:
+        curr_alpha = ALPHA
     for i, (imgs, concepts, labels) in enumerate(train_loader):
         optimizer_C.zero_grad()
         optimizer_T.zero_grad()
@@ -91,7 +106,7 @@ for epoch in range(NUM_EPOCHS):
         _, pred_concepts, pred_labels = model(imgs, return_intermediate=True)
         loss_pred = criterion(pred_labels, labels)
         loss_concepts = criterion(pred_concepts, concepts.float())
-        loss = loss_pred + ALPHA * loss_concepts
+        loss = ((1 - curr_alpha) * loss_pred) + (curr_alpha * loss_concepts)
         loss.backward()
         optimizer_C.step()
         optimizer_T.step()

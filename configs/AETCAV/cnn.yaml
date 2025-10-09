@@ -1,0 +1,23 @@
+model:
+  type: cnn
+  encoder: cnn
+  model_path: models/celebA_CNN.pth
+  latent_dim: 256
+
+training:
+  epochs: 50
+  batch_size: 128
+  lr: 0.001
+  alpha: 0.01
+
+data:
+    data_dir: ../Datasets/CelebA/
+    vals_path: ./vals/AE_TCAV/
+    height: 64
+    width: 64
+    concept_num_train: 4000
+    concept_num_val: 2000
+    target_attr: Attractive
+    concept_attrs: ["Age", "Gender", "Skin", "Bald"]
+
+seed: 0
