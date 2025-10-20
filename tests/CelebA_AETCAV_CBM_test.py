@@ -14,7 +14,7 @@ np.random.seed(0)
 random.seed(0)
 
 
-MODEL_PATH = "models/celebA_CBM_1_50.pth"
+MODEL_PATH = "models/CBM/celebA_CBM_linear_10_0.500_0.pth"
 DATA_DIR = "../Datasets/CelebA/"
 TRAIN_PARAMS_NEW = {
     "epochs": 50,

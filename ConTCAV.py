@@ -159,6 +159,38 @@ class ConstrastiveTCAV:
             return preds
         return preds[:, class_num]
 
+    def getClusterDistances(self) -> torch.tensor:
+        num_clusters = len(self.mu)
+        dists = torch.zeros((num_clusters, num_clusters))
+
+        for i in range(num_clusters):
+            for j in range(num_clusters):
+                if i == j:
+                    continue
+                else:
+                    dists[i, j] = self.calcClusterDist(
+                        self.mu[i], self.sigma[i], self.mu[j], self.sigma[j]
+                    )
+        return dists
+
+    def calcClusterDist(self, mu1, sigma1, mu2, sigma2):
+        # Currently using KL divergence
+        eps = 1e-6
+        mu1 = mu1.cpu().reshape(-1, 1)
+        mu2 = mu2.cpu().reshape(-1, 1)
+        sigma1 = sigma1.cpu()
+        sigma2 = sigma2.cpu()
+        sigma1 = sigma1 + eps * torch.eye(sigma1.size()[0])
+        sigma2 = sigma2 + eps * torch.eye(sigma2.size()[0])
+        k = mu1.size()[0]
+        inv_2 = torch.inverse(sigma2)
+        diff = mu2 - mu1
+        term = np.trace(inv_2 @ sigma1) + diff.T @ inv_2 @ diff - k
+        print(f"{term=}")
+        return 0.5 * (
+            torch.log(torch.linalg.det(sigma2) / torch.linalg.det(sigma1)) + term
+        )
+
 
 # Testing
 if __name__ == "__main__":
@@ -272,3 +304,4 @@ if __name__ == "__main__":
     interpreter.saveModel(
         f"./models/ConTCAV_models/epochs_{epochs}_alpha_{alpha}_lr_{lr:.4f}/"
     )
+    dists = interpreter.getClusterDistances()

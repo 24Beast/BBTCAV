@@ -1,6 +1,9 @@
 # Importing Libraries
+import os
 import torch
 import numpy as np
+import torch.nn as nn
+from pathlib import Path
 
 # DEFAULTS
 TRAIN_PARAMS = {
@@ -122,6 +125,18 @@ class AETCAV:
         if class_num == None:
             return preds
         return preds[:, class_num]
+
+    def saveModel(self, save_dir: Path = "models/AETCAV_models/"):
+        save_dir = Path(save_dir)
+        if not (os.path.isdir(save_dir)):
+            os.makedirs(save_dir)
+        torch.save(self.model.state_dict(), save_dir / "model.pt")
+
+    def loadModel(self, save_dir: Path, model: nn.Module):
+        save_dir = Path(save_dir)
+        state_dict = torch.load(save_dir / "model.pt")
+        model.load_state_dict(state_dict)
+        self.model = model
 
 
 # Testing

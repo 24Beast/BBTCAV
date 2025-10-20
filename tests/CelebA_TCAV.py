@@ -7,6 +7,7 @@ from utils.debug import set_seed
 from torchvision import transforms
 from utils.models import SimpleCNN
 from utils.data import CelebAConcept
+from utils.CBM import ConceptBottleneckModel
 from torch.utils.data import DataLoader, Subset
 from captum.concept import TCAV, Concept
 from captum.attr import LayerIntegratedGradients
@@ -15,7 +16,11 @@ from captum.attr import LayerIntegratedGradients
 set_seed(0)
 
 # Setting Constants
-MODEL_PATH = "models/celebA_CNN.pth"
+MODEL_PATH = "models/CBM/celebA_CBM_linear_5_0.500_1.pth"
+MODEL_TYPE = "CBM"
+POLY_POW = 3
+ENCODER = "resnet18"
+LAST_STAGE = "linear"
 DATA_DIR = "../Datasets/CelebA/"
 B_SIZE = 256
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -86,9 +91,20 @@ for num in range(len(concept_attrs)):
 
     print("Loading Model.")
     checkpoint = torch.load(MODEL_PATH)
-    model = SimpleCNN().to(DEVICE)
+    if MODEL_TYPE == "CNN":
+        model = SimpleCNN().to(DEVICE)
+        model_layer = "net.9"
+    elif MODEL_TYPE == "CBM":
+        model = ConceptBottleneckModel(
+            len(concept_attrs),
+            1,
+            encoder_name=ENCODER,
+            pretrained=True,
+            task_predictor_type=LAST_STAGE,
+            poly_pow=POLY_POW,
+        ).to(DEVICE)
+        model_layer = "concept_predictor.4"
     model.load_state_dict(checkpoint["model_state_dict"])
-    model_layer = "net.9"
 
     # Initializing TCAV
     tcav_obj = TCAV(
@@ -112,5 +128,5 @@ for num in range(len(concept_attrs)):
     )
 
     np.save(
-        VALS_PATH + f"CelebA_SimpleCNN_{target_attr}_{concept_attrs[num]}.npy", vals
+        VALS_PATH + f"CelebA_{MODEL_TYPE}_{target_attr}_{concept_attrs[num]}.npy", vals
     )
