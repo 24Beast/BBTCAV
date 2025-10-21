@@ -1,7 +1,8 @@
 # Importing Libraries
 import os
+import yaml
 import torch
-import random
+import argparse
 import numpy as np
 from utils.debug import set_seed
 from torchvision import transforms
@@ -15,12 +16,26 @@ from captum.attr import LayerIntegratedGradients
 # Setting Random state
 set_seed(0)
 
+# Parser for args
+parser = argparse.ArgumentParser(description="AE-TCAV Runner with YAML Config")
+parser.add_argument(
+    "--config", type=str, required=True, help="Path to YAML configuration file"
+)
+args = parser.parse_args()
+
+with open(args.config, "r") as f:
+    config = yaml.safe_load(f)
+
+print(f"{config=}")
+
 # Setting Constants
-MODEL_PATH = "models/CBM/celebA_CBM_linear_5_0.500_1.pth"
-MODEL_TYPE = "CBM"
-POLY_POW = 3
-ENCODER = "resnet18"
-LAST_STAGE = "linear"
+MODEL_PATH = config["model"].get(
+    "MODEL_PATH", "models/CBM/celebA_CBM_linear_5_0.500_1.pth"
+)
+MODEL_TYPE = config["model"].get("MODEL_TYPE", "CBM")
+LAST_STAGE = config["model"].get("LAST_STAGE", "linear")
+ENCODER = config["model"].get("MODEL_PATH", "resnet18")
+POLY_POW = config["model"].get("POLY_POW", 3)
 DATA_DIR = "../Datasets/CelebA/"
 B_SIZE = 256
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -130,3 +145,7 @@ for num in range(len(concept_attrs)):
     np.save(
         VALS_PATH + f"CelebA_{MODEL_TYPE}_{target_attr}_{concept_attrs[num]}.npy", vals
     )
+
+if MODEL_TYPE == "CBM":
+    print(f"CBM Weights = {model.task_predictor[0].weight}")
+    print(f"Concepts: {concept_attrs}")
