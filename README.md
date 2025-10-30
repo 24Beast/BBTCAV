@@ -20,7 +20,7 @@ torch: 2.7.0
 torchvision: 0.22.0
 captum: 0.7.0
 
-###NOTE
+### NOTE
 
 If you wish to use GPU for TCAV, do the following steps otherwise you may get "RuntimeError: indices should be either on cpu or on the same device as the indexed tensor (cpu), a potential fix that worked for me was:"
 
