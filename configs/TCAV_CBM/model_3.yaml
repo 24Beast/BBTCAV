@@ -1,0 +1,11 @@
+data:
+    data_dir: ../Datasets/CelebA/
+
+model:
+    MODEL_PATH: ./models/CBM/celebA_CBM_linear_10_0.500_0.pth
+    MODEL_TYPE: CBM
+    ENCODER: resnet18
+    LAST_STAGE: linear
+
+results:
+    VALS_PATH: ./results/TCAV_CBM/celebA_CBM_linear_10_0_500_0/

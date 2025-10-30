@@ -34,12 +34,12 @@ MODEL_PATH = config["model"].get(
 )
 MODEL_TYPE = config["model"].get("MODEL_TYPE", "CBM")
 LAST_STAGE = config["model"].get("LAST_STAGE", "linear")
-ENCODER = config["model"].get("MODEL_PATH", "resnet18")
+ENCODER = config["model"].get("ENCODER", "resnet18")
 POLY_POW = config["model"].get("POLY_POW", 3)
 DATA_DIR = "../Datasets/CelebA/"
 B_SIZE = 256
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-VALS_PATH = "./vals/TCAV/"
+VALS_PATH = config["results"].get("VALS_PATH","./vals/TCAV/")
 H, W = (64, 64)
 
 # Setting up Path
@@ -105,7 +105,7 @@ for num in range(len(concept_attrs)):
     val_concept_loader = DataLoader(val_concept_data, batch_size=B_SIZE)
 
     print("Loading Model.")
-    checkpoint = torch.load(MODEL_PATH)
+    checkpoint = torch.load(MODEL_PATH, map_location=DEVICE)
     if MODEL_TYPE == "CNN":
         model = SimpleCNN().to(DEVICE)
         model_layer = "net.9"

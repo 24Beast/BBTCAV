@@ -215,3 +215,6 @@ models/
 vals/
 cav/
 configs/local_*
+slurm-*.out
+local_configs
+results
