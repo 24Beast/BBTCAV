@@ -218,3 +218,4 @@ configs/local_*
 slurm-*.out
 local_configs
 results
+notes

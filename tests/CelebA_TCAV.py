@@ -39,7 +39,7 @@ POLY_POW = config["model"].get("POLY_POW", 3)
 DATA_DIR = "../Datasets/CelebA/"
 B_SIZE = 256
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-VALS_PATH = config["results"].get("VALS_PATH","./vals/TCAV/")
+VALS_PATH = config["results"].get("VALS_PATH", "./vals/TCAV/")
 H, W = (64, 64)
 
 # Setting up Path

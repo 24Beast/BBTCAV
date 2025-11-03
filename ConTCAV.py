@@ -152,7 +152,8 @@ class ConstrastiveTCAV:
         self.sigma = torch.load(save_dir / "sigma.pt")
 
     def getPreds(self, pred_model, imgs, class_num=None, transform_func=lambda x: x):
-        preds = pred_model(transform_func(imgs))
+        transform_imgs = [transform_func(imgs[i]) for i in range(len(imgs))]
+        preds = pred_model(torch.stack(transform_imgs).to(self.device))
         if len(preds.shape) == 1:
             preds = preds.reshape(-1, 1)
         if class_num == None:
