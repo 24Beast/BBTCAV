@@ -18,7 +18,7 @@ class ConstrastiveTCAV:
         self.train_params = train_params
         print("Training Auxiliary Model")
         self.model.train()
-        recon_criterion = self.train_params["recon_loss_function"]()
+        recon_criterion = self.train_params["recon_loss_function"]
         cls_criterion = SupConLossMultiLabel()
         alpha = self.train_params["alpha"]
         optimizer = torch.optim.Adam(
@@ -63,7 +63,7 @@ class ConstrastiveTCAV:
 
     def test(self, testloader):
         self.model.eval()
-        recon_criterion = self.train_params["recon_loss_function"]()
+        recon_criterion = self.train_params["recon_loss_function"]
         cls_criterion = SupConLossMultiLabel()
         total_recon, total_cls = 0.0, 0.0
         num = 0
@@ -209,7 +209,7 @@ if __name__ == "__main__":
     CONCEPTS = ["Age", "Gender", "Skin", "Bald"]
     TRAIN_PARAMS = {
         "epochs": 100,
-        "recon_loss_function": torch.nn.MSELoss,
+        "recon_loss_function": torch.nn.MSELoss(),
         "learning_rate": 1e-3,
         "alpha": 0.05,
         "Num_Concepts": len(CONCEPTS),

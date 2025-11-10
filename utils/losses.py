@@ -1,6 +1,57 @@
+import lpips
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+
+def ssim(img1, img2, window_size=11, size_average=True, val_range=None):
+    # Compute SSIM between two images (supports batches)
+    if val_range is None:
+        max_val = 1 if torch.max(img1) <= 1 else 255
+        min_val = 0
+        L = max_val - min_val
+    else:
+        L = val_range
+
+    padd = window_size // 2
+    channel = img1.size(1)
+
+    # Proper tensor-based Gaussian kernel
+    def gaussian(window_size, sigma):
+        coords = torch.arange(window_size).float() - window_size // 2
+        gauss = torch.exp(-(coords**2) / (2 * sigma**2))
+        return gauss / gauss.sum()
+
+    def create_window(window_size, channel):
+        _1D_window = gaussian(window_size, 1.5).unsqueeze(1)
+        _2D_window = _1D_window.mm(_1D_window.t()).float().unsqueeze(0).unsqueeze(0)
+        window = _2D_window.expand(channel, 1, window_size, window_size).contiguous()
+        return window
+
+    window = create_window(window_size, channel).to(img1.device)
+
+    mu1 = F.conv2d(img1, window, padding=padd, groups=channel)
+    mu2 = F.conv2d(img2, window, padding=padd, groups=channel)
+
+    mu1_sq = mu1.pow(2)
+    mu2_sq = mu2.pow(2)
+    mu1_mu2 = mu1 * mu2
+
+    sigma1_sq = F.conv2d(img1 * img1, window, padding=padd, groups=channel) - mu1_sq
+    sigma2_sq = F.conv2d(img2 * img2, window, padding=padd, groups=channel) - mu2_sq
+    sigma12 = F.conv2d(img1 * img2, window, padding=padd, groups=channel) - mu1_mu2
+
+    C1 = (0.01 * L) ** 2
+    C2 = (0.03 * L) ** 2
+
+    ssim_map = ((2 * mu1_mu2 + C1) * (2 * sigma12 + C2)) / (
+        (mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2)
+    )
+
+    if size_average:
+        return ssim_map.mean()
+    else:
+        return ssim_map.mean(1).mean(1).mean(1)
 
 
 class SupConLoss(nn.Module):
@@ -91,6 +142,20 @@ class SupConLossMultiLabel(nn.Module):
         # Final loss
         loss = -mean_log_prob_pos.mean()
         return loss
+
+
+def MixedReconLoss(alpha=0.33, beta=0.33, gamma=0.33):
+    mse_loss = torch.nn.MSELoss()
+    lpips_loss = lpips.LPIPS(net="alex")
+    lpips_loss = lpips_loss.to(
+        torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    )
+    fn = (
+        lambda y, y_pred: (alpha * mse_loss(y, y_pred))
+        + (beta * lpips_loss(y, y_pred)).mean()
+        + (gamma * (1 - ssim(y, y_pred)))
+    )
+    return fn
 
 
 if __name__ == "__main__":

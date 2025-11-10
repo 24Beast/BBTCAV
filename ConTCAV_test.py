@@ -1,12 +1,13 @@
 # Importing Libraries
 import torch
 from torchvision import transforms
-from utils.data import CelebAJointConcept
+from ConTCAV import ConstrastiveTCAV
+from utils.losses import MixedReconLoss
 from torch.utils.data import DataLoader
+from utils.data import CelebAJointConcept
 from utils.CBM import ConceptBottleneckModel
 from utils.models import SimpleCNN, AutoEncoder
-from utils.debug import visualize, PCA_vis, set_seed
-from ConTCAV import ConstrastiveTCAV
+from utils.debug import visualize, set_seed, PCA_vis
 from utils.ImageNetModels import TRANSFORM_DICT
 
 set_seed(0)
@@ -16,16 +17,18 @@ MODEL_TYPE = "CBM"
 DATA_DIR = "../Datasets/CelebA/"
 CONCEPTS = ["Age", "Gender", "Skin", "Bald"]
 TRAIN_PARAMS = {
-    "epochs": 100,
-    "recon_loss_function": torch.nn.MSELoss,
+    "epochs": 200,
+    "recon_loss_function": MixedReconLoss(
+        alpha=0.0, beta=0.50, gamma=0.50
+    ),  # torch.nn.MSELoss,
     "learning_rate": 1e-3,
-    "alpha": 0.05,
+    "alpha": 0.1,
     "Num_Concepts": len(CONCEPTS),
 }
 B_SIZE = 512
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 VALS_PATH = "./vals/"
-LATENT_DIMS = 2048
+LATENT_DIMS = 4096
 H, W = (64, 64)
 
 save_dir = "./models/ConTCAV_models/epochs_100_alpha_0.05_lr_0.0050"
@@ -77,8 +80,8 @@ val_concept_loader = DataLoader(val_concept_data, batch_size=B_SIZE)
 print("Preparing for Training.")
 model = AutoEncoder(latent_dim=LATENT_DIMS, H=64, W=64)
 interpreter = ConstrastiveTCAV(model, DEVICE)
-# interpreter.train(TRAIN_PARAMS, train_concept_loader, val_concept_loader)
-interpreter.loadModel(save_dir, model)
+interpreter.train(TRAIN_PARAMS, train_concept_loader, val_concept_loader)
+# interpreter.loadModel(save_dir, model)
 
 print("Loading Main Model")
 if MODEL_TYPE == "CNN":
@@ -135,7 +138,7 @@ for i, (imgs, concepts) in enumerate(train_concept_loader, 1):
     z_collected[start : start + l] = z
     l_collected[start : start + l] = concepts
 
-# PCA_vis(z_collected.detach(), l_collected.detach(), num_components=5)
+PCA_vis(z_collected.detach(), l_collected.detach(), num_components=5)
 # interpreter.saveModel(
 #     f"./models/ConTCAV_models/epochs_{epochs}_alpha_{alpha}_lr_{lr:.4f}/"
 # )

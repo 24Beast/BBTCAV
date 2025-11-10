@@ -219,3 +219,4 @@ slurm-*.out
 local_configs
 results
 notes
+figures
