@@ -37,10 +37,10 @@ LAST_STAGE = config["model"].get("last_stage", "linear")
 ENCODER = config["model"].get("encoder", "resnet18")
 POLY_POW = 1
 if LAST_STAGE == "linear":
-    MODEL_NAME = f"celebA_CBM_linear_{NUM_EPOCHS}_{ALPHA:.3f}.pth"
+    MODEL_NAME = f"celebA_CBM_linear_{NUM_EPOCHS}_{ALPHA:.3f}_{NUM_C}.pth"
 else:
     POLY_POW = config["model"].get("poly_pow", 3)
-    MODEL_NAME = f"celebA_CBM_{LAST_STAGE}_{POLY_POW}.pth"
+    MODEL_NAME = f"celebA_CBM_{LAST_STAGE}_{POLY_POW}_{NUM_EPOCHS}_{ALPHA:.3f}_{NUM_C}.pth"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # TODO: Add some kind of scheduler for ALPHA, we want it to decrease from 1->0 as training progresses.
 SEED = config.get("seed", 0)
