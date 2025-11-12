@@ -14,7 +14,7 @@ def set_seed(seed: int) -> None:
     torch.backends.cudnn.deterministic = True
 
 
-def visualize(imgs, recons, num_imgs=10):
+def visualize(imgs, recons, num_imgs=10, img_label="image", recon_label="reconstruct"):
     if len(imgs) < num_imgs:
         num_imgs = len(imgs)
     idx = torch.randperm(len(imgs))[:num_imgs]
@@ -25,9 +25,9 @@ def visualize(imgs, recons, num_imgs=10):
         recon = np.array(to_pil_image(recons[i]))
         fig, ax = plt.subplots(1, 2)
         ax[0].imshow(img)
-        ax[0].set_title("image")
+        ax[0].set_title(img_label)
         ax[1].imshow(recon)
-        ax[1].set_title("reconstruct")
+        ax[1].set_title(recon_label)
         plt.show()
 
 

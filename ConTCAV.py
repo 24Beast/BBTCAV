@@ -5,6 +5,7 @@ import numpy as np
 import torch.nn as nn
 from pathlib import Path
 from utils.losses import SupConLossMultiLabel
+from scipy.stats import chi2
 
 
 # Helper Class
@@ -122,18 +123,42 @@ class ConstrastiveTCAV:
         class_num,
         eps=0.01,
         transform_func=lambda x: x,
+        c_delta=False,
     ):
         recon, z = self.model(imgs)
-        c_vector = (
-            self.mu[concept_num] - z
-        )  # TODO: Check if we can integrate sigma values to improve the vector?
-        c_vector = c_vector / torch.norm(c_vector)  # converting to unit vector
-        z_new = z + (eps * c_vector)
+        if not (c_delta):
+            c_vector = (
+                self.mu[concept_num] - z
+            )  # TODO: Check if we can integrate sigma values to improve the vector?
+            c_vector = c_vector / torch.norm(c_vector)  # converting to unit vector
+            z_new = z + (eps * c_vector)
+        else:
+            c_vector = self.calc_c_vector(z, concept_num, eps)
+            c_vector = c_vector.to(self.device)
+            z_new = z + c_vector
         imgs_new = self.model.decoder(z_new)
         preds = self.getPreds(pred_model, recon, class_num, transform_func)
         new_preds = self.getPreds(pred_model, imgs_new, class_num, transform_func)
         grads = (new_preds - preds) / eps
         return grads
+
+    def calc_c_vector(self, z, concept_num, delta=0.1):
+        mu = self.mu[concept_num]
+        sigma = self.sigma[concept_num]
+        n = len(mu)
+        c_vector = torch.zeros(z.shape)
+        sigma_inv = sigma.inverse()
+        z_c = mu - z
+        for i in range(len(z)):
+            k = -1 * (z_c[i].T @ sigma_inv @ z_c[i]) * np.log(2) / chi2.ppf(0.95, n)
+            if k > 0:
+                k = k * -1
+            k = k / len(z)
+            probs = torch.exp(k)
+            probs_d = min(probs + delta, 1.00)
+            a = 1 - (torch.log(probs_d) / k) ** 0.5
+            c_vector[i] = z_c[i] * a
+        return c_vector
 
     def saveModel(self, save_dir: Path = "ConTCAV_vals/"):
         save_dir = Path(save_dir)
@@ -156,6 +181,7 @@ class ConstrastiveTCAV:
         preds = pred_model(torch.stack(transform_imgs).to(self.device))
         if len(preds.shape) == 1:
             preds = preds.reshape(-1, 1)
+        # preds = torch.sigmoid(preds)
         if class_num == None:
             return preds
         return preds[:, class_num]

@@ -17,9 +17,9 @@ MODEL_TYPE = "CBM"
 DATA_DIR = "../Datasets/CelebA/"
 CONCEPTS = ["Age", "Gender", "Skin", "Bald"]
 TRAIN_PARAMS = {
-    "epochs": 200,
+    "epochs": 100,
     "recon_loss_function": MixedReconLoss(
-        alpha=0.0, beta=0.50, gamma=0.50
+        alpha=0.25, beta=0.50, gamma=0.25
     ),  # torch.nn.MSELoss,
     "learning_rate": 1e-3,
     "alpha": 0.1,
@@ -28,7 +28,7 @@ TRAIN_PARAMS = {
 B_SIZE = 512
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 VALS_PATH = "./vals/"
-LATENT_DIMS = 4096
+LATENT_DIMS = 1024
 H, W = (64, 64)
 
 save_dir = "./models/ConTCAV_models/epochs_100_alpha_0.05_lr_0.0050"
@@ -63,7 +63,7 @@ train_concept_data = CelebAJointConcept(
     concept=concept_attrs,
     mode="concept",
     transform=pre_transform,
-    concept_num=4000,
+    concept_num=8000,
 )
 train_concept_loader = DataLoader(train_concept_data, batch_size=B_SIZE)
 val_concept_data = CelebAJointConcept(
@@ -73,7 +73,7 @@ val_concept_data = CelebAJointConcept(
     concept=concept_attrs,
     mode="concept",
     transform=pre_transform,
-    concept_num=2000,
+    concept_num=4000,
 )
 val_concept_loader = DataLoader(val_concept_data, batch_size=B_SIZE)
 
@@ -117,6 +117,7 @@ for c_num, c_name in enumerate(concept_attrs):
                 0,
                 eps=0.1,
                 transform_func=external_transform,
+                c_delta=True,
             )
             grads[start : start + l] = curr_grads
             start += l
