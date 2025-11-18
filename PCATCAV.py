@@ -167,7 +167,6 @@ class PCA_CAV:
         return c_vector
 
     def saveModel(self, save_dir: Path = "PCA_CAV_vals/"):
-        # TODO: Add something for PCA_k
         save_dir = Path(save_dir)
         if not (os.path.isdir(save_dir)):
             os.makedirs(save_dir)
@@ -176,9 +175,9 @@ class PCA_CAV:
         torch.save(self.sigma, save_dir / "sigma.pt")
         torch.save(self.pca_components, save_dir / "pca_comps.pt")
         torch.save(self.pca_mean, save_dir / "pca_mean.pt")
+        torch.save(self.pca_k, save_dir / "pca_k.pt")
 
     def loadModel(self, save_dir: Path, model: nn.Module):
-        # TODO: Add something for PCA_k
         save_dir = Path(save_dir)
         state_dict = torch.load(save_dir / "model.pt")
         model.load_state_dict(state_dict)
@@ -187,6 +186,7 @@ class PCA_CAV:
         self.sigma = torch.load(save_dir / "sigma.pt")
         self.pca_components = torch.load(save_dir / "pca_comps.pt")
         self.pca_mean = torch.load(save_dir / "pca_mean.pt")
+        self.pca_k = torch.load(save_dir / "pca_k.pt")
 
     def getPreds(self, pred_model, imgs, class_num=None, transform_func=lambda x: x):
         transform_imgs = [transform_func(imgs[i]) for i in range(len(imgs))]
