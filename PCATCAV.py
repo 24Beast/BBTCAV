@@ -127,7 +127,8 @@ class PCA_CAV:
         eps=0.01,
         transform_func=lambda x: x,
         c_delta=False,
-        debug=True,
+        debug=False,
+        debug_dir="./debug",
     ):
         recon, z = self.model(imgs)
         if not (c_delta):
@@ -140,7 +141,11 @@ class PCA_CAV:
             z_new = z + c_vector
         imgs_new = self.model.decoder(z_new)
         if debug:
-            visualize(recon[:20].detach(), imgs_new[:20].detach())
+            visualize(
+                recon[:20].detach(),
+                imgs_new[:20].detach(),
+                save_dir=Path(debug_dir) / f"{concept_num}_{class_num}",
+            )
         preds = self.getPreds(pred_model, recon, class_num, transform_func)
         new_preds = self.getPreds(pred_model, imgs_new, class_num, transform_func)
         grads = (new_preds - preds) / eps
@@ -348,9 +353,11 @@ if __name__ == "__main__":
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     VALS_PATH = "./vals/"
     LATENT_DIMS = 2048
-    H, W = (128, 128)
+    H, W = (64, 64)
 
-    save_dir = "./models/PCA_CAV_models/epochs_100_alpha_0.05_lr_0.0050"
+    save_dir = Path(
+        f"./models/PCA_CAV_models/epochs_{TRAIN_PARAMS['epochs']}_alpha_{TRAIN_PARAMS['alpha']:.2f}_lr_{TRAIN_PARAMS['learning_rate']:.4f}"
+    )
     if MODEL_TYPE == "CBM":
         ENCODER = "resnet18"
         LAST_STAGE = "linear"
@@ -400,6 +407,7 @@ if __name__ == "__main__":
     model = AutoEncoder(latent_dim=LATENT_DIMS, H=H, W=W)
     interpreter = PCA_CAV(model, DEVICE)
     interpreter.train(TRAIN_PARAMS, train_concept_loader, val_concept_loader)
+    interpreter.saveModel(save_dir)
     # interpreter.loadModel(save_dir, model)
 
     print("Loading Main Model")
@@ -436,6 +444,8 @@ if __name__ == "__main__":
                     eps=0.01,
                     transform_func=external_transform,
                     c_delta=True,
+                    debug=True,
+                    debug_dir=save_dir / "debug",
                 )
                 grads[start : start + l] = curr_grads
                 start += l
@@ -444,7 +454,7 @@ if __name__ == "__main__":
         )
 
     recon, z = interpreter.model(imgs)
-    visualize(imgs, recon)
+    visualize(imgs, recon, save_dir=save_dir / "figures")
 
     num = len(train_concept_loader.dataset)
     z_collected = torch.zeros((num, LATENT_DIMS))
@@ -457,7 +467,12 @@ if __name__ == "__main__":
         z_collected[start : start + l] = z
         l_collected[start : start + l] = concepts
 
-    PCA_vis(z_collected.detach(), l_collected.detach(), num_components=5)
+    PCA_vis(
+        z_collected.detach(),
+        l_collected.detach(),
+        num_components=5,
+        save_dir=save_dir / "debug/pca",
+    )
     # interpreter.saveModel(
     #     f"./models/ConTCAV_models/epochs_{epochs}_alpha_{alpha}_lr_{lr:.4f}/"
     # )
