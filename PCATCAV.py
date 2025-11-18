@@ -167,20 +167,26 @@ class PCA_CAV:
         return c_vector
 
     def saveModel(self, save_dir: Path = "PCA_CAV_vals/"):
+        # TODO: Add something for PCA_k
         save_dir = Path(save_dir)
         if not (os.path.isdir(save_dir)):
             os.makedirs(save_dir)
         torch.save(self.model.state_dict(), save_dir / "model.pt")
         torch.save(self.mu, save_dir / "mu.pt")
         torch.save(self.sigma, save_dir / "sigma.pt")
+        torch.save(self.pca_components, save_dir / "pca_comps.pt")
+        torch.save(self.pca_mean, save_dir / "pca_mean.pt")
 
     def loadModel(self, save_dir: Path, model: nn.Module):
+        # TODO: Add something for PCA_k
         save_dir = Path(save_dir)
         state_dict = torch.load(save_dir / "model.pt")
         model.load_state_dict(state_dict)
         self.model = model
         self.mu = torch.load(save_dir / "mu.pt")
         self.sigma = torch.load(save_dir / "sigma.pt")
+        self.pca_components = torch.load(save_dir / "pca_comps.pt")
+        self.pca_mean = torch.load(save_dir / "pca_mean.pt")
 
     def getPreds(self, pred_model, imgs, class_num=None, transform_func=lambda x: x):
         transform_imgs = [transform_func(imgs[i]) for i in range(len(imgs))]
@@ -344,7 +350,7 @@ if __name__ == "__main__":
     LATENT_DIMS = 2048
     H, W = (128, 128)
 
-    save_dir = "./models/ConTCAV_models/epochs_100_alpha_0.05_lr_0.0050"
+    save_dir = "./models/PCA_CAV_models/epochs_100_alpha_0.05_lr_0.0050"
     if MODEL_TYPE == "CBM":
         ENCODER = "resnet18"
         LAST_STAGE = "linear"
