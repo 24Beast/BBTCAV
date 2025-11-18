@@ -28,7 +28,7 @@ TRAIN_PARAMS = {
 B_SIZE = 512
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 VALS_PATH = "./vals/"
-LATENT_DIMS = 1024
+LATENT_DIMS = 2048
 H, W = (64, 64)
 
 save_dir = "./models/ConTCAV_models/epochs_100_alpha_0.05_lr_0.0050"
