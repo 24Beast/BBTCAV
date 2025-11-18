@@ -65,7 +65,3 @@ def PCA_vis(z, labels, num_components=2):
             plt.title(f"PCA Visualizations for axis {i} and {j}.")
             plt.legend()
             plt.show()
-
-
-def is_positive_definite(mat):
-    return bool((mat == mat.T).all() and (torch.linalg.eigvals(mat).real >= 0).all())
